@@ -5,11 +5,14 @@ import {
   SafeAreaView,
   StatusBar,
   Platform,
+  useColorScheme,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { ThemedText } from "@/components/ThemedText";
 
 export default function WelcomeScreen() {
+  const colorScheme = useColorScheme();
+
   return (
     <SafeAreaView className="flex-1" style={{ marginTop: Platform.OS === "android" ? StatusBar.currentHeight : 0 }}>
       <ImageBackground
@@ -17,7 +20,7 @@ export default function WelcomeScreen() {
         className="flex-1"
       />
         <LinearGradient
-          colors={["#ffffff", "#4C0120"]}
+          colors={[colorScheme === "dark" ? "#000000" : "#ffffff", "#4C0120"]}
           className="flex-1 w-full h-full absolute justify-end items-center opacity-95 pb-[30%]"
         >
           <Image
@@ -31,10 +34,10 @@ export default function WelcomeScreen() {
             Discover and explore articles in a visually engaging way
           </ThemedText>
           <TouchableOpacity
-            className="bg-white dark:bg-[#4C0120] px-6 py-3 rounded-full mb-3"
+            className="bg-[#4C0120] dark:bg-white px-6 py-3 rounded-full mb-3"
             // onPress={() => navigation.navigate('SignUp')}
           >
-            <ThemedText className="text-[#4A0D66] text-lg font-semibold">
+            <ThemedText className="text-white dark:text-[#4C0120] text-lg font-semibold">
               Sign Up
             </ThemedText>
           </TouchableOpacity>

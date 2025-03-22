@@ -15,13 +15,11 @@ export function ThemedText({
   type = 'default',
   ...rest
 }: ThemedTextProps) {
-  const color = useThemeColor({ light: lightColor, dark: darkColor }, 'text');
 
   return (
     <Text
       style={[
         {fontFamily: 'Inter_400Regular'},
-        { color },
       ]}
       {...rest}
     />
