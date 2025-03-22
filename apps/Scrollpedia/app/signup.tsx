@@ -13,8 +13,18 @@ import "nativewind";
 import { Link } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { ThemedText } from "@/components/ThemedText";
+import authService from "@/services/authService";
+import { NavigationProp, useNavigation } from "@react-navigation/native";
 
+export type RootStackParamList = {
+  "content-preference": {
+    username: string;
+    email: string;
+    password: string;
+  };
+};
 export default function SignupScreen() {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -22,8 +32,30 @@ export default function SignupScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  const validateForm = () => {
+    if (!username || !email || !password || !confirmPassword) {
+      alert("Please fill all the fields");
+      return false;
+    }
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSignup = () => {
+    // if (!validateForm()) return;
+    // pass on data to content-preferences screen, there we will store the data in our backend
+    navigation.navigate("content-preference", {
+      username,
+      email,
+      password,
+    });
+  };
+
   return (
-    <SafeAreaView className="flex-1 bg-[#4C0120]">
+    <SafeAreaView className="flex-1">
       <LinearGradient colors={["#000000", "#4C0120"]} className="flex-1">
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -34,7 +66,9 @@ export default function SignupScreen() {
           >
             <View className="flex-1 p-5 justify-center">
               <View className="mb-10">
-                <ThemedText className="text-4xl font-bold text-white">Create an</ThemedText>
+                <ThemedText className="text-4xl font-bold text-white">
+                  Create an
+                </ThemedText>
                 <ThemedText className="text-4xl font-bold text-[#ce0d5d]">
                   Account!
                 </ThemedText>
@@ -132,8 +166,13 @@ export default function SignupScreen() {
                   </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity className="bg-[#9c0040] rounded-full h-12 items-center justify-center mt-3 mb-5">
-                  <ThemedText className="text-white text-lg font-bold">Sign Up</ThemedText>
+                <TouchableOpacity
+                  className="bg-[#9c0040] rounded-full h-12 items-center justify-center mt-3 mb-5"
+                  onPress={handleSignup}
+                >
+                  <ThemedText className="text-white text-lg font-bold">
+                    Sign Up
+                  </ThemedText>
                 </TouchableOpacity>
 
                 <TouchableOpacity className="flex-row justify-center mt-5">
@@ -144,7 +183,7 @@ export default function SignupScreen() {
                     <Link href="/login" replace>
                       <ThemedText className="text-[#e83e8c] text-sm font-bold">
                         {" "}
-                        Sign in
+                        Log In
                       </ThemedText>
                     </Link>
                   </Link>

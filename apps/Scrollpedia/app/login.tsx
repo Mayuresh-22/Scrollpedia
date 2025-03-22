@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import {
   View,
   TextInput,
@@ -13,12 +13,50 @@ import { LinearGradient } from "expo-linear-gradient";
 import "nativewind";
 import { Link } from "expo-router";
 import { ThemedText } from "@/components/ThemedText";
+import { getItem, setItem } from "@/utils/AsyncStorage";
+import authService from "@/services/authService";
+
+export interface RememberedCredentials {
+  email: string;
+  password: string;
+}
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      alert("Please enter email and password");
+      return;
+    }
+    // remember credentials if rememberMe is true, idk why aditya did this but thike
+    if (rememberMe) {
+      await setItem("loginCredentials", { email, password });
+    }
+    // now perform login action
+    const userData = await authService.login(email, password)
+    if (!userData) {
+      alert("Invalid login credentials");
+      return;
+    }
+    // else, save the content preferences in async storage
+    await setItem("contentPreferences", userData.contentPreferences);
+  }
+
+  
+  useLayoutEffect(() => { // husshhh, idk why?
+    const getRememberedCredentials = async () => {
+      const rememberedCredentials = await getItem("loginCredentials");
+      if (rememberedCredentials) {
+        setEmail(rememberedCredentials.email);
+        setPassword(rememberedCredentials.password);
+      }
+    };
+    getRememberedCredentials();
+  }, []);
 
   return (
     <SafeAreaView className="flex-1">
@@ -100,7 +138,7 @@ export default function LoginScreen() {
                   </ThemedText>
                 </TouchableOpacity>
 
-                <TouchableOpacity className="bg-[#9c0040] rounded-lg h-12 items-center justify-center mb-5">
+                <TouchableOpacity className="bg-[#9c0040] rounded-full h-12 items-center justify-center mb-5" onPress={handleLogin}>
                   <ThemedText className="text-white text-lg font-bold">Log In</ThemedText>
                 </TouchableOpacity>
 
@@ -116,7 +154,7 @@ export default function LoginScreen() {
                     <Link href="/signup" replace>
                       <ThemedText className="text-[#ce0d5d] text-sm font-bold">
                         {" "}
-                        Sign up
+                        Sign Up
                       </ThemedText>
                     </Link>
                   </Link>
