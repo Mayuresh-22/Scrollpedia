@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import "nativewind";
 
 const categories = [
+<<<<<<< HEAD
   "Technology & Science",
   "History & Culture",
   "Entertainment & Media",
@@ -11,6 +12,15 @@ const categories = [
   "Education & Knowledge",
   "Business & Economics",
   "Health & Wellness",
+=======
+  "Health & Wellness",
+  "Entertainment",
+  "Sports",
+  "Travel & Culture",
+  "Education",
+  "Science & Technology",
+  "News & Politics",
+>>>>>>> a28dd170db93a85cc0151c605b69a817534f7c08
 ];
 
 export default function PreferenceSelector() {
