@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { ThemedText } from "@/components/ThemedText";
+import { Link } from "expo-router";
 
 export default function WelcomeScreen() {
   const colorScheme = useColorScheme();
@@ -21,7 +22,7 @@ export default function WelcomeScreen() {
       />
         <LinearGradient
           colors={[colorScheme === "dark" ? "#000000" : "#ffffff", "#4C0120"]}
-          className="flex-1 w-full h-full absolute justify-end items-center opacity-95 pb-[30%]"
+          className="flex-1 w-full h-full absolute justify-end items-center opacity-85 pb-[30%]"
         >
           <Image
             source={require("@/assets/images/icon.png")} // mayuresh: Replace with logo
@@ -33,20 +34,20 @@ export default function WelcomeScreen() {
           <ThemedText className="text-white text-lg text-center px-10 mb-6">
             Discover and explore articles in a visually engaging way
           </ThemedText>
-          <TouchableOpacity
+          <Link
             className="bg-[#4C0120] dark:bg-white px-6 py-3 rounded-full mb-3"
-            // onPress={() => navigation.navigate('SignUp')}
+            href="/signup"
           >
             <ThemedText className="text-white dark:text-[#4C0120] text-lg font-semibold">
               Sign Up
             </ThemedText>
-          </TouchableOpacity>
-          <TouchableOpacity
+          </Link>
+          <Link
             className="border border-white px-6 py-3 rounded-full"
-            // onPress={() => navigation.navigate('Login')}
+            href="/login"
           >
             <ThemedText className="text-white text-lg font-semibold">Log In</ThemedText>
-          </TouchableOpacity>
+          </Link>
         </LinearGradient>
     </SafeAreaView>
   );
