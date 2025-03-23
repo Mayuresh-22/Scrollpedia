@@ -5,12 +5,16 @@ import {
   SafeAreaView,
   ScrollView,
   Platform,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import "nativewind";
 import { ThemedText } from "@/components/ThemedText";
 import authService from "@/services/authService";
 import { useRoute } from "@react-navigation/native";
+import { AxiosError } from "axios";
+import { setItem } from "@/utils/AsyncStorage";
+import { useAuth } from "@/context/AuthContext";
 
 type RouteParams = {
   username: string;
@@ -38,8 +42,10 @@ const categories = [
 
 export default function PreferenceSelector() {
   const MIN_MAX_CATEGORIES = 5;
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const { username, email, password } = useRoute().params as RouteParams;
+  const authContext = useAuth();
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const toggleCategory = (category: string) => {
     if (selectedCategories.includes(category)) {
@@ -52,7 +58,8 @@ export default function PreferenceSelector() {
   };
 
   const handleSubmit = async () => {
-    console.log("Selected categories:", selectedCategories);
+    if (loading) return;
+    setLoading(true);
     if (selectedCategories.length < MIN_MAX_CATEGORIES) {
       alert(
         `Please select at least ${
@@ -62,13 +69,31 @@ export default function PreferenceSelector() {
       return;
     }
     // create user with selected categories and data passed from signup screen
-    const userData = await authService.signUp(
-      username,
-      email,
-      password,
-      selectedCategories
-    )
-    console.log("User data:", userData);
+    try {
+      const userData = await authService.signUp(
+        username,
+        email,
+        password,
+        selectedCategories
+      );
+      console.log("User data:", userData);
+      await setItem("userPreferences", userData?.preferences);
+      await setItem("userId", userData?.user_id);
+      alert("Sign up successful!");
+      authContext.login();
+    } catch (error) {
+      console.log("Error signing up:", error);
+      if ((error as AxiosError).response?.data) {
+        alert(
+          (error as AxiosError).response?.data?.message ||
+            "Error signing up. Please try again later."
+        );
+      } else {
+        alert("Error signing up. Please try again later.");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -111,9 +136,15 @@ export default function PreferenceSelector() {
               onPress={handleSubmit}
               className="w-full bg-[#9c0040] rounded-full h-12 items-center justify-center mt-3 mb-5"
             >
-              <ThemedText className="text-white text-lg font-bold">
-                SUBMIT
-              </ThemedText>
+              <View className="flex-row gap-3 items-center justify-center">
+                <ThemedText className="text-white text-lg font-bold">
+                  Submit
+                </ThemedText>
+                {loading && <View className="">
+                  <ActivityIndicator color="#FFFFFF" />
+                </View>}
+              </View>
+              {/* loader */}
             </TouchableOpacity>
           </View>
         </ScrollView>

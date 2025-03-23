@@ -45,7 +45,7 @@ export default function SignupScreen() {
   };
 
   const handleSignup = () => {
-    // if (!validateForm()) return;
+    if (!validateForm()) return;
     // pass on data to content-preferences screen, there we will store the data in our backend
     navigation.navigate("content-preference", {
       username,

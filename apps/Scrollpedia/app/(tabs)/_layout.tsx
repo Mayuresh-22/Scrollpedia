@@ -1,5 +1,5 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Redirect, Tabs, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 
 import { HapticTab } from '@/components/HapticTab';
@@ -7,9 +7,16 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { supabase } from '@/services/supabase';
+import { useAuth } from '@/context/AuthContext';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const authContext = useAuth();
+
+  if (!authContext.isAuthenticated) {
+    return <Redirect href="/(auth)" />;
+  }
 
   return (
     <Tabs
@@ -27,8 +34,9 @@ export default function TabLayout() {
         }),
       }}>
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
+          headerShown: false,
           title: 'Home',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
         }}
@@ -36,6 +44,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="explore"
         options={{
+          headerShown: false,
           title: 'Explore',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
         }}

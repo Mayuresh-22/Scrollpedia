@@ -7,14 +7,16 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import "nativewind";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { ThemedText } from "@/components/ThemedText";
 import { getItem, setItem } from "@/utils/AsyncStorage";
 import authService from "@/services/authService";
+import { useAuth } from "@/context/AuthContext";
 
 export interface RememberedCredentials {
   email: string;
@@ -26,8 +28,12 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const authContext = useAuth();
 
   const handleLogin = async () => {
+    if (loading) return;
+    setLoading(true);
     if (!email || !password) {
       alert("Please enter email and password");
       return;
@@ -36,18 +42,31 @@ export default function LoginScreen() {
     if (rememberMe) {
       await setItem("loginCredentials", { email, password });
     }
-    // now perform login action
-    const userData = await authService.login(email, password)
-    if (!userData) {
-      alert("Invalid login credentials");
-      return;
-    }
-    // else, save the content preferences in async storage
-    await setItem("contentPreferences", userData.contentPreferences);
-  }
 
-  
-  useLayoutEffect(() => { // husshhh, idk why?
+    try {
+      // now perform login action
+      const userData = await authService.login(email, password);
+      console.log("Temp log: userData", userData);
+
+      if (!userData) {
+        alert("Invalid login credentials");
+        return;
+      }
+      // else, save the content preferences in async storage
+      await setItem("userPreferences", userData?.preferences);
+      await setItem("userId", userData?.user_id);
+      alert("Logged in successfully");
+      authContext.login();
+    } catch (error) {
+      console.error("Error logging in:", error);
+      alert("An error occurred while logging in");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useLayoutEffect(() => {
+    // husshhh, idk why?
     const getRememberedCredentials = async () => {
       const rememberedCredentials = await getItem("loginCredentials");
       if (rememberedCredentials) {
@@ -70,8 +89,12 @@ export default function LoginScreen() {
           >
             <View className="flex-1 p-5 justify-center">
               <View className="mb-10">
-                <ThemedText className="text-4xl font-bold text-white">Welcome</ThemedText>
-                <ThemedText className="text-4xl font-bold text-[#ce0d5d]">Back!</ThemedText>
+                <ThemedText className="text-4xl font-bold text-white">
+                  Welcome
+                </ThemedText>
+                <ThemedText className="text-4xl font-bold text-[#ce0d5d]">
+                  Back!
+                </ThemedText>
               </View>
 
               <View className="w-full">
@@ -138,12 +161,22 @@ export default function LoginScreen() {
                   </ThemedText>
                 </TouchableOpacity>
 
-                <TouchableOpacity className="bg-[#9c0040] rounded-full h-12 items-center justify-center mb-5" onPress={handleLogin}>
-                  <ThemedText className="text-white text-lg font-bold">Log In</ThemedText>
+                <TouchableOpacity
+                  className="bg-[#9c0040] rounded-full h-12 items-center justify-center mb-5"
+                  onPress={handleLogin}
+                >
+                  <View className="flex-row gap-3 items-center justify-center">
+                    <ThemedText className="text-white text-lg font-bold">
+                      Log In
+                    </ThemedText>
+                    {loading && <ActivityIndicator color="#ffffff" />}
+                  </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity className="items-center">
-                  <ThemedText className="text-[#ccc] text-sm">Forgot Password?</ThemedText>
+                  <ThemedText className="text-[#ccc] text-sm">
+                    Forgot Password?
+                  </ThemedText>
                 </TouchableOpacity>
 
                 <View className="flex-row justify-center mt-5">
