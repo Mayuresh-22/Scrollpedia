@@ -93,4 +93,25 @@ app.post("/user", async (c) => {
   });
 });
 
+app.get("/feed", async (c) => {
+  const db = c.var.DB;
+  const user = c.var.user;
+
+  const { data, error } = await db
+    .from("articles")
+    .select("article_id, article_data, tags")
+
+  if (error) {
+    console.log("GET /feed: Error fetching feed", error.message);
+    return c.json({
+      status: "error",
+      message: error.message
+    }, 500);
+  }
+  return c.json({
+    status: "success",
+    data
+  });
+});
+
 export default app;
