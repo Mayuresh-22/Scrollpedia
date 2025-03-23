@@ -1,0 +1,9 @@
+# Supabase
+SUPABASE_URL=<your supabase url>
+SUPABASE_KEY=<your supabase key>
+
+# Backend
+BACKEND_URL=<your backend url>
+
+# Gemini AI
+GEMINI_KEY=<your gemini ai key>
