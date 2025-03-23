@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async () => {
     setIsAuthenticated(true);
-    router.replace("/(tabs)/home");
+    router.replace("/(tabs)/feed");
   };
 
   const logout = async () => {
