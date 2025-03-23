@@ -3,10 +3,11 @@
 
 import BaseService from "@/services/baseService";
 import { supabase } from "@/services/supabase";
+import { AxiosError } from "axios";
 
 export interface BackendUserData {
-  id: string;
-  contentPreferences: string[];
+  user_id: string;
+  preferences: string[];
 }
 
 class AuthService extends BaseService {
@@ -18,21 +19,21 @@ class AuthService extends BaseService {
         password
       });
       if (error) {
-        console.log("Error logging in with supabase", error);
+        console.log("AuthService: Error logging in with supabase", error);
         return null;
       }
       // now get user data (content-preferences) from our backend
-      const userData: BackendUserData = await this.backend.get("/user");
-      return userData;
+      const userData = await this.backend.get("/user");
+      return userData.data.data as BackendUserData;
     } catch (error) {
-      console.log("Promise rejected with error:", error);
+      console.log("AuthService: Promise rejected with error:", error);
       return Promise.reject(error);
     }
   }
 
-  async signUp(username: string, email: string, password: string, contentPreferences: string[]) {
+  async signUp(username: string, email: string, password: string, preferences: string[]) {
     try {
-      // sign up with supabase then,
+      // sign up with supabase first and then,
       const { data } = await supabase.auth.signUp({
         email,
         password,
@@ -42,17 +43,23 @@ class AuthService extends BaseService {
           }
         }
       });
+      console.log("AuthService: Supabase sign up data:", data);
+      
       if (!data) {
-        console.log("Error signing up with supabase");
+        console.log("AuthService: Error signing up with supabase");
         return null;
       }
       // now store user data in our backend
-      const userData: BackendUserData = await this.backend.post("/user", {
-        contentPreferences
+      const userData = await this.backend.post("/user", {
+        user_id: data.user?.id,
+        preferences
       });
-      return userData;
+      return userData.data as BackendUserData;
     } catch (error) {
-      console.log("Promise rejected with error:", error);
+      if ((error as AxiosError).response?.data) {
+        console.log("AuthService: Sign up promise rejected with error:", (error as AxiosError).response?.data);
+      }
+      console.log("AuthService: Sign up promise rejected with error:", error);
       return Promise.reject(error);
     }
   }
@@ -62,7 +69,7 @@ class AuthService extends BaseService {
       const { data } = await this.backend.post("/auth/logout");
       return data;
     } catch (error) {
-      console.log("Promise rejected with error:", error);
+      console.log("AuthService: Promise rejected with error:", error);
       return Promise.reject(error);
     }
   }

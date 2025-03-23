@@ -18,7 +18,8 @@ class BaseService {
     this.backend.interceptors.request.use(async (config) => {
       const { data } = await supabase.auth.getSession();
       if (data.session?.access_token) {
-        config.headers.Authorization = `Bearer ${data.session?.access_token}`;
+        config.headers.Authorization = `${data.session?.access_token}`;
+        config.headers["X-Refresh-Token"] = `${data.session?.refresh_token}`;
       }
       return config;
     });
@@ -28,9 +29,7 @@ class BaseService {
         return response;
       },
       (error) => {
-        if (error.response.status === 401) {
-          // we will just trigger a logout event here, team: add retry logic afterword yarr
-        }
+        console.log("Error in response interceptor:", error);
         return Promise.reject(error);
       },
     );
