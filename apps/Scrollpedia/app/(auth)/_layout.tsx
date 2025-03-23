@@ -18,7 +18,7 @@ export default function AuthLayout() {
   const authContext = useAuth();
 
   if (authContext.isAuthenticated) {
-    return <Redirect href="/(tabs)/home" />;
+    return <Redirect href="/(tabs)/feed" />;
   }
 
   return (
