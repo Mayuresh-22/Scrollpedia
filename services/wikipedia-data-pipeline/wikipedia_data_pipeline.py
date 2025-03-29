@@ -83,7 +83,7 @@ def get_wikipedia_articles(secrets=dict[str, str]) -> list[dict[str, any]]:
                     print(f"No articles found in Category:{subcategory}")
                     continue
 
-                selected_articles = random.sample(articles, min(4, len(articles)))
+                selected_articles = random.sample(articles, min(6, len(articles)))
 
                 for article in selected_articles:
                     if len(articles_list) >= MAX_ARTICLES:
@@ -163,6 +163,7 @@ def get_wikipedia_articles(secrets=dict[str, str]) -> list[dict[str, any]]:
                         endpoint=SUMMARIZATION_SERVICE_ENDPOINT
                     )
                     audio_data = audio_data.get("data").get("audio_data")
+                    print(f"Audio data for {page_id}: {audio_data}")
                     if not audio_data:
                         # Still we can save the article, audio isn't mandatory
                         print(f"Failed to get audio summary link for id: {page_id} and title: {title}")
@@ -182,6 +183,7 @@ def get_wikipedia_articles(secrets=dict[str, str]) -> list[dict[str, any]]:
                     }
                     articles_list.append(article_dict)
                     articles_fetched += 1
+                    print(f"Fetched article: {title}")
 
             except requests.RequestException as e:
                 print(f"Network error processing {subcategory}: {str(e)}")
@@ -215,7 +217,8 @@ def main():
         
         # Now dump all of our articles in the db
         print("Log: Upserting all the article into DB")
-        supabase.table("articles").upsert(articles, on_conflict="article_id", ignore_duplicates=True).execute()
+        result = supabase.table("articles").upsert(articles, on_conflict="article_id", ignore_duplicates=True).execute()
+        print("Log: Upsert result:", result.data)
         
         stop_time = time()
         print(f"Log: Total time taken: {stop_time - start_time:.2f} seconds")
