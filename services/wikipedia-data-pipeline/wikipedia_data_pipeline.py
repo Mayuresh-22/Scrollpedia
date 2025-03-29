@@ -193,7 +193,7 @@ def get_wikipedia_articles(secrets=dict[str, str]) -> list[dict[str, str]]:
     return articles_list
 
 
-@app.function(secrets=[modal.Secret.from_name("scrollpedia-scheduler")], schedule=modal.Period(years=1), retries=3)
+@app.function(secrets=[modal.Secret.from_name("scrollpedia-scheduler")], schedule=modal.Period(years=1))
 def main():
     from supabase import create_client
     from time import time
