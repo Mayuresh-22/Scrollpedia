@@ -28,7 +28,7 @@ export default function FeedScreen() {
   const [savedItems, setSavedItems] = useState<{ [key: number]: FeedArticleItem }>({});
   const [loading, setLoading] = useState(true);
   const [showMenu, setShowMenu] = useState<boolean>(false);
-  const [sound, setSound] = useState<Sound|null>(null);
+  const [currSound, setCurrSound] = useState<Sound|null>(null);
   const colorScheme = useColorScheme();
   const flatListRef = useRef<FlatList>(null);
 
@@ -148,21 +148,19 @@ export default function FeedScreen() {
 
   async function playSound(audio_file_url: string) {
     console.log('Loading Sound');
+    currSound?.stopAsync(); // Stop any currently playing sound
     const { sound } = await Audio.Sound.createAsync({ uri: audio_file_url });
-    setSound(sound);
-
-    console.log('Playing Sound');
+    setCurrSound(sound);
     await sound.playAsync();
   }
 
   useEffect(() => {
-    return sound
+    return currSound
       ? () => {
-          console.log('Unloading Sound');
-          sound.unloadAsync();
+          currSound.unloadAsync();
         }
       : undefined;
-  }, [sound]);
+  }, [currSound]);
 
   if (loading) {
     return (
