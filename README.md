@@ -5,6 +5,14 @@ Scrollpedia is a modern, AI-powered React Native app that delivers an immersive,
 ## System Architecture
 ![image](https://github.com/user-attachments/assets/ed7f5e7e-fbf7-4c94-98f7-81a1bbfc99d8)
 
+## Few sleek screenshots
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/a3002b0b-8a4f-49b3-8daf-03f63031a273" width="22%">
+  <img src="https://github.com/user-attachments/assets/c481fe93-5a1e-4eca-b259-762906d86a8e width="22%">
+  <img src="https://github.com/user-attachments/assets/d1b34522-b044-44f9-b736-7eaaec0a5d22" width="22%">
+  <img src="https://github.com/user-attachments/assets/c4337753-1266-4055-95e1-61b2cf779ae4" width="22%">
+</p>
+
 
 ## Features
 
