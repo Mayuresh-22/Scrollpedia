@@ -1,5 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+const SAVED_ARTICLES_KEY = 'savedArticles';
+
 export const setItem = async (key: string, value: any): Promise<void> => {
   try {
     await AsyncStorage.setItem(key, JSON.stringify(value));
@@ -39,5 +41,42 @@ export const clear = async (): Promise<void> => {
     await AsyncStorage.clear();
   } catch (error) {
     console.error('Error clearing AsyncStorage:', error);
+  }
+};
+
+// New functions for saving articles
+export const saveArticle = async (article: any): Promise<void> => {
+  try {
+    let savedArticles = await getItem(SAVED_ARTICLES_KEY);
+    if (!savedArticles) savedArticles = [];
+
+    // Check if the article is already saved
+    const exists = savedArticles.some((a: any) => a.article_id === article.article_id);
+    if (!exists) {
+      savedArticles.push(article);  // Store full article
+      await setItem(SAVED_ARTICLES_KEY, savedArticles);
+    }
+  } catch (error) {
+    console.error("Error saving article:", error);
+  }
+};
+export const getSavedArticles = async (): Promise<any[]> => {
+  try {
+    return (await getItem(SAVED_ARTICLES_KEY)) || [];
+  } catch (error) {
+    console.error("Error getting saved articles:", error);
+    return [];
+  }
+};
+
+export const removeSavedArticle = async (articleId: number): Promise<void> => {
+  try {
+    let savedArticles = await getItem(SAVED_ARTICLES_KEY);
+    if (!savedArticles) return;
+    
+    savedArticles = savedArticles.filter((a: any) => a.article_id !== articleId);
+    await setItem(SAVED_ARTICLES_KEY, savedArticles);
+  } catch (error) {
+    console.error('Error removing saved article:', error);
   }
 };
