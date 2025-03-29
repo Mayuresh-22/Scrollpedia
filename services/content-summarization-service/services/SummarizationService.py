@@ -1,6 +1,7 @@
-from services.LLM import LLM
 from constants.Constants import Constants
+from services.LLM import LLM
 from services.AudioService import AudioService
+from services.CloudinaryService import CloudinaryService
 
 class SummarizationService:
 
@@ -11,23 +12,25 @@ class SummarizationService:
         """
         # get summarization from the model
         text_summary = LLM().text_summary(article_data)
-        print("text_summary", text_summary)
+        if  text_summary is None:
+            return None
         # give it to audio model
         # get audio file link from audio model
         audio_stream = AudioService().synthesize_speech(
             text=text_summary
         )
-        if audio_stream:
-            return text_summary
+        if not audio_stream:
+            return None
+        # upload audio stream to cloudinary
+        audio_file_link = CloudinaryService().upload_audio_stream(audio_stream)
+        return audio_file_link
+        
 
 if __name__ == "__main__":
     # Example usage:
     aws_access_key_id = Constants.AWS_ACCESS_KEY_ID
     aws_secret_access_key = Constants.AWS_SECRET_ACCESS_KEY
-    text = '''- Instead of hosting custom models, we can use third-party TTS (text-to-speech) service
-    - Google TTS service gives 60 min/month (which is very little)
-    - Murf AI TTS gives 1lakh char (lifetime) which we'll consume in testing itself
-    - So, Amazon Polly is promising to give 5 million for 12 months'''
+    text = '''Instead of hosting custom models, we can use third-party TTS (text-to-speech) service'''
 
     audio_service = AudioService(aws_access_key_id, aws_secret_access_key)
     audio_service.synthesize_speech(text)
