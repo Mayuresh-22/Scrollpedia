@@ -34,21 +34,25 @@ def summarize():
     article_description = reqBody.get('article_description')
     # Here you would call your summarization logic and return the result
     # For now, let's just return the received data as a placeholder
-    audio_file_link = SummarizationService().summarize(article_data={
+    audio_file_data = SummarizationService().summarize(article_data={
         'article_id': article_id,
         'article_title': article_title,
         'article_description': article_description
     })
+    if audio_file_data is None:
+        return jsonify({
+            'status': 'error',
+            'message': 'Summarization failed',
+            'error': 'Failed to generate summary'
+        }), 500
 
-    if audio_file_link:
+    if audio_file_data:
         return jsonify({
             'status': 'success',
             'message': 'Summarization successful',
             'data': {
                 'article_id': article_id,
-                'article_title': article_title,
-                'article_description': article_description,
-                'summary': audio_file_link
+                'audio_data': audio_file_data
             }
         })
     else:
