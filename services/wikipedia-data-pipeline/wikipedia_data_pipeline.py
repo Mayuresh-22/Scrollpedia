@@ -19,7 +19,7 @@ from summarization_service import SummarizationService
 function_image = modal.Image.debian_slim().pip_install(["requests", "supabase", "google-genai"])
 app = modal.App("scrollpedia-wikipedia-data-pipeline", image=function_image)
 
-def get_wikipedia_articles(secrets=dict[str, str]) -> list[dict[str, str]]:
+def get_wikipedia_articles(secrets=dict[str, str]) -> list[dict[str, any]]:
     API_URL = "https://en.wikipedia.org/w/api.php"
     BASE_WIKI_URL = "https://en.wikipedia.org/wiki/"
     GEMINI_KEY = secrets.get("GEMINI_KEY")
@@ -162,7 +162,7 @@ def get_wikipedia_articles(secrets=dict[str, str]) -> list[dict[str, str]]:
                         service_base_url=SUMMARIZATION_SERVICE_URL,
                         endpoint=SUMMARIZATION_SERVICE_ENDPOINT
                     )
-                    audio_data = audio_data.get("audio_data")
+                    audio_data = audio_data.get("data").get("audio_data")
                     if not audio_data:
                         # Still we can save the article, audio isn't mandatory
                         print(f"Failed to get audio summary link for id: {page_id} and title: {title}")
