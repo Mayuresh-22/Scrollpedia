@@ -1,5 +1,5 @@
 from groq import Groq
-from constants.constants import Constants
+from app.constants.constants import Constants
 
 class LLM:
     def __init__(self):

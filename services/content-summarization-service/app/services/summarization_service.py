@@ -1,7 +1,7 @@
-from constants.constants import Constants
-from services.llm import LLM
-from services.audio_service import AudioService
-from services.cloudinary_service import CloudinaryService
+from app.constants.constants import Constants
+from app.services.llm import LLM
+from app.services.audio_service import AudioService
+from app.services.cloudinary_service import CloudinaryService
 
 class SummarizationService:
 
