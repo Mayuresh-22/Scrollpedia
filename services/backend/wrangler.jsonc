@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "backend",
+	"name": "personalized-scrollpedia-backend",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-03-20",
 	"assets": {

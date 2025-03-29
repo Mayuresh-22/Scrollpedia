@@ -2,7 +2,6 @@ import { ContextVariableMap, Hono } from "hono";
 import Middleware from "../middlewares/middleware";
 import { SupabaseClient, User } from "@supabase/supabase-js";
 import GeminiService from "../services/gemini";
-import cosineSimilarity from "cosine-similarity";
 
 export interface Variables extends ContextVariableMap {
   DB: SupabaseClient;
@@ -113,35 +112,24 @@ app.get("/feed", async (c) => {
     }, 500);
   }
 
-  const userEmbedding = userProfile.profile_embedding;
+  // Call the RPC function to fetch similar articles
+  const { data: similarArticles, error: articlesError } = await db.rpc("match_articles", {
+    query_embedding: userProfile.profile_embedding,
+    match_threshold: 0.45,
+    match_count: 15
+  });
 
-  // Fetch all articles with their embeddings
-  const { data: articles, error: articlesError } = await db
-    .from("articles")
-    .select("article_id, article_data, tags, article_embedding");
-
-  if (articlesError || !articles) {
-    console.log("GET /feed: Error fetching articles", articlesError?.message);
+  if (articlesError || !similarArticles) {
+    console.log("GET /feed: Error fetching similar articles", articlesError?.message);
     return c.json({
       status: "error",
-      message: "Error fetching articles",
+      message: "Error fetching similar articles",
     }, 500);
   }
 
-  // Calculate cosine similarity for each article
-  const similarArticles = articles
-    .map((article) => ({
-      article_id: article.article_id,
-      article_data: article.article_data,
-      tags: article.tags,
-      similarity: cosineSimilarity(userEmbedding, article.article_embedding),
-    }))
-    .sort((a, b) => b.similarity - a.similarity) // Sort by similarity in descending order
-    .slice(0, 10); // Retrieve the top 10 similar articles
-
   return c.json({
     status: "success",
-    data: similarArticles,
+    data: similarArticles
   });
 });
 
