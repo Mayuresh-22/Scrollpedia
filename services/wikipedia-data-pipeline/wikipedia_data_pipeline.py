@@ -156,7 +156,7 @@ def get_wikipedia_articles(secrets=dict[str, str]) -> list[dict[str, str]]:
                     audio_data = SummarizationService().get_article_audio_data(
                         data={
                             "article_id": page_id,
-                            "article_heading": title,
+                            "article_title": title,
                             "article_description": summary
                         },
                         service_base_url=SUMMARIZATION_SERVICE_URL,
