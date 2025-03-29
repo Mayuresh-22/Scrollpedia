@@ -161,6 +161,8 @@ export default function FeedScreen() {
   const [showMenu, setShowMenu] = useState<boolean>(false);
   const [currSound, setCurrSound] = useState<Sound|null>(null);
   const colorScheme = useColorScheme();
+  const [isCommentModalVisible, setCommentModalVisible] = useState(false);
+  const [currentArticleId, setCurrentArticleId] = useState<number | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
