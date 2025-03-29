@@ -22,4 +22,4 @@ class GeminiService:
             model=self.model,
             contents=serialize_text
         )
-        return result.embeddings
+        return result.embeddings[0].values
