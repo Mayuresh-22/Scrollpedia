@@ -9,7 +9,7 @@ import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { supabase } from '@/services/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { Home, User2 } from 'lucide-react-native';
+import { Bookmark, Home, Save, User2 } from 'lucide-react-native';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -48,6 +48,14 @@ export default function TabLayout() {
           headerShown: false,
           tabBarShowLabel: false,
           tabBarIcon: ({ color }) => <User2 size={28} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="savedArticles"
+        options={{
+          headerShown: false,
+          tabBarShowLabel: false,
+          tabBarIcon: ({ color }) => <Bookmark size={28} color={color} />,
         }}
       />
     </Tabs>
