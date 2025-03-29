@@ -2,6 +2,7 @@ import boto3
 import random
 from constants.Constants import Constants
 
+
 class AudioService:
     def __init__(self, region_name='us-west-2'):
         self.polly_client = boto3.Session(
@@ -9,38 +10,42 @@ class AudioService:
             aws_secret_access_key=Constants.AWS_SECRET_ACCESS_KEY,
             region_name=region_name
         ).client('polly')
+        self.voice_ids = [
+            "Joanna", "Salli", "Kimberly", "Kendra", "Ivy", 
+            "Gregory", "Kevin", "Matthew", "Justin", "Joey"
+        ]
 
-    def synthesize_speech(self, text, voice_id='Joanna', random_voice=False, output_format = "mp3", engine='standard', language_code='en-IN', sample_rate='22050'):
+    def synthesize_speech(self, text, voice_id='Joanna', random_voice=False, output_format='mp3', engine='standard', language_code='en-IN', sample_rate='22050'):
         """
         Synthesizes speech from the given text and saves it to the specified file.
 
         :param text: The text to convert to speech.
         :param voice_id: The voice ID to use for speech synthesis.
-        :param random_voice: Whether to use a random voice ID.
         :param output_format: The format of the audio output (e.g., 'mp3').
         :param engine: The engine to use ('standard' or 'neural').
         :param language_code: The language code for the text.
         :param sample_rate: The sample rate for the audio output.
         """
-        # Define the list of voice IDs
-        voice_ids = [
-            "Joanna", "Salli", "Kimberly", "Kendra", "Ivy", 
-            "Gregory", "Kevin", "Matthew", "Justin", "Joey"
-        ]
+        # Here's magic we do to get a random voice ID
         # Select voice ID based on the random_voice parameter
         if random_voice:
-            voice_id = random.choice(voice_ids)
+            voice_id = random.choice(self.voice_ids)
 
-        response = self.polly_client.synthesize_speech(
-            VoiceId=voice_id,
-            OutputFormat=output_format,
-            Text=text,
-            Engine=engine,
-            LanguageCode=language_code,
-            TextType='text',
-            SampleRate=sample_rate
-        )
-        return response["AudioStream"]
+        try:
+            response = self.polly_client.synthesize_speech(
+                VoiceId=voice_id,
+                OutputFormat=output_format,
+                Text=text,
+                Engine=engine,
+                LanguageCode=language_code,
+                TextType='text',
+                SampleRate=sample_rate
+            )
+            return response["AudioStream"]
+        except Exception as e:
+            print(f"Error synthesizing speech: {e}")
+            return None
+
 
 # Example usage:
 if __name__ == "__main__":
