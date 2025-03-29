@@ -21,6 +21,8 @@ import { ThemedText } from "@/components/ThemedText";
 import feedService, { FeedArticleItem } from "@/services/feedService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link } from "expo-router";
+import { Audio } from 'expo-av';
+import { Sound } from "expo-av/build/Audio";
 
 const { height } = Dimensions.get("window");
 
@@ -157,10 +159,9 @@ export default function FeedScreen() {
   const [savedItems, setSavedItems] = useState<{ [key: number]: FeedArticleItem }>({});
   const [loading, setLoading] = useState(true);
   const [showMenu, setShowMenu] = useState<boolean>(false);
-  const flatListRef = useRef<FlatList>(null);
+  const [currSound, setCurrSound] = useState<Sound|null>(null);
   const colorScheme = useColorScheme();
-  const [isCommentModalVisible, setCommentModalVisible] = useState(false);
-  const [currentArticleId, setCurrentArticleId] = useState<number | null>(null);
+  const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     const initializeData = async () => {
@@ -173,6 +174,8 @@ export default function FeedScreen() {
         if (!feedArticles) {
           setLoading(true);
           const feed = await feedService.getFeed();
+          console.log(feed);
+          
           setFeedArticles(feed);
         }
       } catch (error) {
@@ -292,6 +295,22 @@ export default function FeedScreen() {
     </View>
   );
 
+  async function playSound(audio_file_url: string) {
+    console.log('Loading Sound');
+    currSound?.stopAsync(); // Stop any currently playing sound
+    const { sound } = await Audio.Sound.createAsync({ uri: audio_file_url });
+    setCurrSound(sound);
+    await sound.playAsync();
+  }
+
+  useEffect(() => {
+    return currSound
+      ? () => {
+          currSound.unloadAsync();
+        }
+      : undefined;
+  }, [currSound]);
+
   if (loading) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center">
@@ -344,6 +363,11 @@ export default function FeedScreen() {
           decelerationRate="fast"
           directionalLockEnabled
           showsVerticalScrollIndicator={false}
+          onViewableItemsChanged={({ viewableItems }) => {
+            if (viewableItems.length > 0 && viewableItems[0].item.audio_data.file_url) {
+              playSound(viewableItems[0].item.audio_data.file_url);
+            }
+          }}
           className="w-full snap-proximity rounded-tl-3xl rounded-tr-3xl"
         />
         <CommentModal
