@@ -2,6 +2,7 @@ import { ContextVariableMap, Hono } from "hono";
 import Middleware from "../middlewares/middleware";
 import { SupabaseClient, User } from "@supabase/supabase-js";
 import GeminiService from "../services/gemini";
+import cosineSimilarity from "cosine-similarity";
 
 export interface Variables extends ContextVariableMap {
   DB: SupabaseClient;
@@ -97,20 +98,50 @@ app.get("/feed", async (c) => {
   const db = c.var.DB;
   const user = c.var.user;
 
-  const { data, error } = await db
-    .from("articles")
-    .select("article_id, article_data, tags")
+  // Fetch the user's profile embedding
+  const { data: userProfile, error: userError } = await db
+    .from("preferences")
+    .select("profile_embedding")
+    .eq("user_id", user.id)
+    .single();
 
-  if (error) {
-    console.log("GET /feed: Error fetching feed", error.message);
+  if (userError || !userProfile) {
+    console.log("GET /feed: Error fetching user profile embedding", userError?.message);
     return c.json({
       status: "error",
-      message: error.message
+      message: "Error fetching user profile embedding",
     }, 500);
   }
+
+  const userEmbedding = userProfile.profile_embedding;
+
+  // Fetch all articles with their embeddings
+  const { data: articles, error: articlesError } = await db
+    .from("articles")
+    .select("article_id, article_data, tags, article_embedding");
+
+  if (articlesError || !articles) {
+    console.log("GET /feed: Error fetching articles", articlesError?.message);
+    return c.json({
+      status: "error",
+      message: "Error fetching articles",
+    }, 500);
+  }
+
+  // Calculate cosine similarity for each article
+  const similarArticles = articles
+    .map((article) => ({
+      article_id: article.article_id,
+      article_data: article.article_data,
+      tags: article.tags,
+      similarity: cosineSimilarity(userEmbedding, article.article_embedding),
+    }))
+    .sort((a, b) => b.similarity - a.similarity) // Sort by similarity in descending order
+    .slice(0, 10); // Retrieve the top 10 similar articles
+
   return c.json({
     status: "success",
-    data
+    data: similarArticles,
   });
 });
 
