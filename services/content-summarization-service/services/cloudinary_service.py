@@ -1,7 +1,7 @@
 import os
 import requests
 from typing import BinaryIO
-from constants.Constants import Constants
+from constants.constants import Constants
 
 class CloudinaryService:
     ROOT_ASSETS_PATH = "summary_audio_files"

@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from services.SummarizationService import SummarizationService
+from services.summarization_service import SummarizationService
 
 app = Flask(__name__)
 

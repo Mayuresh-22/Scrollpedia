@@ -1,6 +1,6 @@
 import boto3
 import random
-from constants.Constants import Constants
+from constants.constants import Constants
 
 
 class AudioService:
