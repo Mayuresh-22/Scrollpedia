@@ -17,12 +17,14 @@ app.get("/ping", (c) => {
 });
 
 app.get("/message", (c) => {
-  return c.text("Hello from Scrolpedia!");
+  return c.text("Hello from Scrollpedia!");
 });
 
+// ✅ Fetch user preferences
 app.get("/user", async (c) => {
   const db = c.var.DB;
   const user = c.var.user;
+  
   const { data, error } = await db
     .from("preferences")
     .select("user_id, preferences")
@@ -32,26 +34,28 @@ app.get("/user", async (c) => {
   if (error) {
     return c.json({ error: error.message }, 500);
   }
+
   return c.json({
     status: "success",
     data
   });
 });
 
+//  Save user preferences
 app.post("/user", async (c) => {
   const db = c.var.DB;
   const user = c.var.user;
-
   const { preferences } = await c.req.json();
 
   if (preferences.length === 0 || preferences.length < 5) {
     console.log("POST /user: Please provide at least 5 preferences");
     return c.json({ error: "Please provide at least 5 preferences" }, 400);
   }
+
   const existing = await db
     .from("preferences")
     .select("user_id")
-    .eq("user_id", user.id)
+    .eq("user_id", user.id);
 
   if ((existing.data?.length as number) > 0) {
     console.log("POST /user: User already exists");
@@ -60,9 +64,9 @@ app.post("/user", async (c) => {
       message: "User already exists"
     }, 400);
   }
-  // generate preferences text embeddings from gemini ai
-  const profile_embedding = await new GeminiService(c)
-    .getTextEmbedding(preferences);
+
+  // Generate preferences text embeddings using Gemini AI
+  const profile_embedding = await new GeminiService(c).getTextEmbedding(preferences);
   if (!profile_embedding) {
     console.log("POST /user: Error generating profile embedding");
     return c.json({
@@ -70,6 +74,7 @@ app.post("/user", async (c) => {
       message: "Error generating profile embedding"
     }, 500);
   }
+
   const { data, error } = await db.from("preferences").insert({
     user_id: user.id,
     preferences,
@@ -83,6 +88,7 @@ app.post("/user", async (c) => {
       message: error.message
     }, 500);
   }
+
   return c.json({
     message: "User created successfully",
     status: "success",
@@ -93,25 +99,47 @@ app.post("/user", async (c) => {
   });
 });
 
+// Fetch user feed (with category filtering)
 app.get("/feed", async (c) => {
   const db = c.var.DB;
-  const user = c.var.user;
 
-  const { data, error } = await db
-    .from("articles")
-    .select("article_id, article_data, tags")
+  // Extract categories from query parameters
+  const categoriesQuery = c.req.query("categories");
+  const selectedCategories = categoriesQuery ? categoriesQuery.split(",") : [];
 
-  if (error) {
-    console.log("GET /feed: Error fetching feed", error.message);
+  try {
+    let query = db.from("articles").select("article_id, article_data, tags");
+
+    // If categories are selected, apply filtering
+    if (selectedCategories.length > 0) {
+      console.log("Filtering feed based on selected categories:", selectedCategories);
+      query = query.contains("tags", selectedCategories);
+    } else {
+      console.log("Fetching all articles as no categories are selected");
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.log("GET /feed: Error fetching feed", error.message);
+      return c.json({
+        status: "error",
+        message: error.message
+      }, 500);
+    }
+
+    return c.json({
+      status: "success",
+      data
+    });
+
+  } catch (err) {
+    console.log("GET /feed: Unexpected error", err);
     return c.json({
       status: "error",
-      message: error.message
+      message: "Unexpected error occurred"
     }, 500);
   }
-  return c.json({
-    status: "success",
-    data
-  });
 });
 
 export default app;

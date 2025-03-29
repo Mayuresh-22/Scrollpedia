@@ -15,9 +15,16 @@ export interface FeedArticleItem {
 }
 
 class FeedService extends BaseService {
-  async getFeed() {
+  async getFeed(selectedCategories?: string[]) {
     try {
-      const feed = await this.backend.get("/feed");
+      let endpoint = "/feed";
+      
+      // If categories are selected, send them as query params
+      if (selectedCategories && selectedCategories.length > 0) {
+        endpoint = `/feed?categories=${encodeURIComponent(selectedCategories.join(","))}`;
+      }
+
+      const feed = await this.backend.get(endpoint);
       return feed.data.data as FeedArticleItem[];
     } catch (error) {
       console.log("FeedService: Promise rejected with error:", error);
@@ -25,5 +32,6 @@ class FeedService extends BaseService {
     }
   }
 }
+
 
 export default new FeedService();
