@@ -153,7 +153,7 @@ def get_wikipedia_articles(secrets=dict[str, str]) -> list[dict[str, str]]:
                         # Bruh simply skip this article
                         print(f"Failed to get embedding for id: {page_id} and title: {title}")
                         continue
-                    audio_data = SummarizationService.get_article_audio_data(
+                    audio_data = SummarizationService().get_article_audio_data(
                         data={
                             "article_id": page_id,
                             "article_heading": title,
