@@ -22,41 +22,41 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
+      tabBarActiveTintColor: colorScheme === 'dark' ? Colors.dark.tint : "#4c0120",
+      headerShown: false,
+      tabBarButton: HapticTab,
+      tabBarBackground: TabBarBackground,
+      tabBarStyle: Platform.select({
+        ios: {
+        // Use a transparent background on iOS to show the blur effect
+        position: 'absolute',
+        },
+        default: {},
+      }),
       }}>
       <Tabs.Screen
-        name="feed"
-        options={{
-          headerShown: false,
-          tabBarShowLabel: false,
-          tabBarIcon: ({ color }) => <Home size={28} color={color} />,
-        }}
+      name="feed"
+      options={{
+        headerShown: false,
+        tabBarShowLabel: false,
+        tabBarIcon: ({ color }) => <Home size={28} color={color} />,
+      }}
       />
       <Tabs.Screen
-        name="explore"
-        options={{
-          headerShown: false,
-          tabBarShowLabel: false,
-          tabBarIcon: ({ color }) => <User2 size={28} color={color} />,
-        }}
+      name="explore"
+      options={{
+        headerShown: false,
+        tabBarShowLabel: false,
+        tabBarIcon: ({ color }) => <User2 size={28} color={color} />,
+      }}
       />
       <Tabs.Screen
-        name="savedArticles"
-        options={{
-          headerShown: false,
-          tabBarShowLabel: false,
-          tabBarIcon: ({ color }) => <Bookmark size={28} color={color} />,
-        }}
+      name="savedArticles"
+      options={{
+        headerShown: false,
+        tabBarShowLabel: false,
+        tabBarIcon: ({ color }) => <Bookmark size={28} color={color} />,
+      }}
       />
     </Tabs>
   );
