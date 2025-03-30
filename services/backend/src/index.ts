@@ -113,6 +113,7 @@ app.get("/feed", async (c) => {
   }
 
   // Call the RPC function to fetch similar articles
+  // TODO: create more rpc's to support collaborative filtering recommendations
   const { data: similarArticles, error: articlesError } = await db.rpc("match_articles", {
     query_embedding: userProfile.profile_embedding,
     match_threshold: 0.45,
