@@ -97,20 +97,39 @@ app.get("/feed", async (c) => {
   const db = c.var.DB;
   const user = c.var.user;
 
-  const { data, error } = await db
-    .from("articles")
-    .select("article_id, article_data, tags")
+  // Fetch the user's profile embedding
+  const { data: userProfile, error: userError } = await db
+    .from("preferences")
+    .select("profile_embedding")
+    .eq("user_id", user.id)
+    .single();
 
-  if (error) {
-    console.log("GET /feed: Error fetching feed", error.message);
+  if (userError || !userProfile) {
+    console.log("GET /feed: Error fetching user profile embedding", userError?.message);
     return c.json({
       status: "error",
-      message: error.message
+      message: "Error fetching user profile embedding",
     }, 500);
   }
+
+  // Call the RPC function to fetch similar articles
+  const { data: similarArticles, error: articlesError } = await db.rpc("match_articles", {
+    query_embedding: userProfile.profile_embedding,
+    match_threshold: 0.45,
+    match_count: 15
+  });
+
+  if (articlesError || !similarArticles) {
+    console.log("GET /feed: Error fetching similar articles", articlesError?.message);
+    return c.json({
+      status: "error",
+      message: "Error fetching similar articles",
+    }, 500);
+  }
+
   return c.json({
     status: "success",
-    data
+    data: similarArticles
   });
 });
 
