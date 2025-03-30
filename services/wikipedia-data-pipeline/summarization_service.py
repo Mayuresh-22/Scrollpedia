@@ -1,5 +1,6 @@
 import requests
 
+
 class SummarizationService:
         
     def get_article_audio_data(self, data: dict[str, str], service_base_url: str, endpoint: str) -> str | None:
