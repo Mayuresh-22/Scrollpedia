@@ -2,6 +2,7 @@ import { ContextVariableMap, Hono } from "hono";
 import Middleware from "../middlewares/middleware";
 import { SupabaseClient, User } from "@supabase/supabase-js";
 import GeminiService from "../services/gemini";
+import { shuffle } from "../utils/shuffle";
 
 export interface Variables extends ContextVariableMap {
   DB: SupabaseClient;
@@ -130,7 +131,7 @@ app.get("/feed", async (c) => {
 
   return c.json({
     status: "success",
-    data: similarArticles
+    data: shuffle(similarArticles)
   });
 });
 
