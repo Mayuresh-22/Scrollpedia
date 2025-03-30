@@ -10,174 +10,50 @@ import {
   useColorScheme,
   ActivityIndicator,
   Text,
-  StyleSheet,
-  TextInput,
-  Modal,
-  Share
 } from "react-native";
-import { Heart, Send, Bookmark, MoreVertical, MessageSquare, X } from "lucide-react-native";
+import { Heart, Send, Bookmark, MoreVertical } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { ThemedText } from "@/components/ThemedText";
 import feedService, { FeedArticleItem } from "@/services/feedService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link } from "expo-router";
-import { Audio } from 'expo-av';
+import { Audio } from "expo-av";
 import { Sound } from "expo-av/build/Audio";
 
 const { height } = Dimensions.get("window");
 
-const CommentModal = ({ visible, onClose, articleId }: { visible: boolean; onClose: () => void; articleId: number }) => {
-  const [comments, setComments] = useState<Array<{ username: string; comment: string }>>([]);
-  const [newComment, setNewComment] = useState("");
-
-  useEffect(() => {
-    const fetchComments = async () => {
-      const fetchedComments = [
-        { username: "user1", comment: "Great article!" },
-        { username: "user2", comment: "Very informative!" },
-      ];
-      setComments(fetchedComments);
-    };
-
-    if (visible) {
-      fetchComments();
-    }
-  }, [visible, articleId]);
-
-  const handleSubmitComment = () => {
-    if (newComment.trim() === "") return;
-
-    setComments([...comments, { username: "current_user", comment: newComment }]);
-    setNewComment("");
-  };
-
-  return (
-    <Modal
-      animationType="slide"
-      transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <View style={styles.modalBackground}>
-        <View style={styles.modalContainer}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <X size={24} color="#4C0120" />
-          </TouchableOpacity>
-          <FlatList
-            data={comments}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.commentContainer}>
-                <Text style={styles.username}>{item.username}</Text>
-                <Text style={styles.comment}>{item.comment}</Text>
-              </View>
-            )}
-            style={styles.commentList}
-          />
-
-          <View style={styles.commentInputContainer}>
-            <TextInput
-              style={styles.commentInput}
-              placeholder="Add a comment..."
-              value={newComment}
-              onChangeText={setNewComment}
-              multiline
-            />
-            <TouchableOpacity onPress={handleSubmitComment}>
-              <Text style={styles.submitButton}>Post</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-};
-
-const styles = StyleSheet.create({
-  modalBackground: {
-    flex: 1,
-    justifyContent: "flex-end",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-  },
-  modalContainer: {
-    width: "100%",
-    backgroundColor: "white",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    height: "60%",
-  },
-  commentList: {
-    flex: 1,
-  },
-  commentContainer: {
-    marginBottom: 15,
-  },
-  username: {
-    fontWeight: "bold",
-    fontSize: 14,
-  },
-  comment: {
-    fontSize: 14,
-    marginTop: 5,
-  },
-  commentInputContainer: {
-    borderTopWidth: 1,
-    borderTopColor: "#ddd",
-    paddingTop: 10,
-    paddingBottom: 10,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  commentInput: {
-    flex: 1,
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingLeft: 10,
-    fontSize: 16,
-    marginRight: 10,
-  },
-  submitButton: {
-    color: "#4C0120",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  closeButton: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    zIndex: 10,
-  },
-});
-
 export default function FeedScreen() {
-  const [feedArticles, setFeedArticles] = useState<FeedArticleItem[] | null>(null);
+  const [feedArticles, setFeedArticles] = useState<FeedArticleItem[] | null>(
+    null
+  );
   const [likedItems, setLikedItems] = useState<{ [key: number]: boolean }>({});
-  const [savedItems, setSavedItems] = useState<{ [key: number]: FeedArticleItem }>({});
+  const [savedItems, setSavedItems] = useState<{
+    [key: number]: FeedArticleItem;
+  }>({});
   const [loading, setLoading] = useState(true);
   const [showMenu, setShowMenu] = useState<boolean>(false);
-  const [currSound, setCurrSound] = useState<Sound|null>(null);
+  const [currSound, setCurrSound] = useState<Sound | null>(null);
+  const [prefetchedSounds, setPrefetchedSounds] = useState<{
+    [key: number]: Sound;
+  }>({});
   const colorScheme = useColorScheme();
-  const [isCommentModalVisible, setCommentModalVisible] = useState(false);
-  const [currentArticleId, setCurrentArticleId] = useState<number | null>(null);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     const initializeData = async () => {
       try {
+        // Load saved items from AsyncStorage
         const saved = await AsyncStorage.getItem("savedArticles");
         if (saved) {
           setSavedItems(JSON.parse(saved));
         }
 
+        // Fetch feed if not already loaded
         if (!feedArticles) {
           setLoading(true);
           const feed = await feedService.getFeed();
           console.log(feed);
-          
+
           setFeedArticles(feed);
         }
       } catch (error) {
@@ -189,6 +65,21 @@ export default function FeedScreen() {
 
     initializeData();
   }, [feedArticles]);
+
+  useEffect(() => {
+    return currSound
+      ? () => {
+          currSound.unloadAsync(); // Ensure the sound is unloaded when the component unmounts
+        }
+      : undefined;
+  }, [currSound]);
+
+  useEffect(() => {
+    return () => {
+      // Unload all prefetched sounds when the component unmounts
+      Object.values(prefetchedSounds).forEach((sound) => sound.unloadAsync());
+    };
+  }, [prefetchedSounds]);
 
   const toggleLike = (id: number) => {
     setLikedItems((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -204,14 +95,17 @@ export default function FeedScreen() {
         let updated: { [key: number]: FeedArticleItem };
 
         if (isSaved) {
+          // Remove from saved items
           updated = { ...prev };
           delete updated[id];
           console.log(`Article with ID ${id} removed from saved items`);
         } else {
+          // Add to saved items and print article details
           updated = { ...prev, [id]: article };
-          console.log("Saved Article:", JSON.stringify(article, null, 2));
+          console.log("Saved Article:", JSON.stringify(article, null, 2)); // Pretty print article object
         }
 
+        // Save to AsyncStorage
         AsyncStorage.setItem("savedArticles", JSON.stringify(updated));
         return updated;
       });
@@ -224,27 +118,6 @@ export default function FeedScreen() {
     setShowMenu(!showMenu);
   };
 
-  const openCommentModal = (id: number) => {
-    setCurrentArticleId(id);
-    setCommentModalVisible(true);
-  };
-
-  const closeCommentModal = () => {
-    setCommentModalVisible(false);
-  };
-
-  
-  // Function to share article details using Share API
-  const shareArticle = async (title: string, url: string) => {
-    try {
-      await Share.share({
-        message: `Check out "${title}" on Wikipedia:\n${url}\nShared via Scrollpedia 📚`,
-      });
-    } catch (error) {
-      console.error("Error sharing:", error);
-    }
-  };
-
   const renderItem = ({ item }: { item: FeedArticleItem }) => (
     <View className="h-fit w-full relative" style={{ height: height * 0.9 }}>
       <ImageBackground
@@ -253,8 +126,12 @@ export default function FeedScreen() {
         resizeMode="cover"
       />
 
+      {/* Floating Action Buttons */}
       <View className="absolute right-4" style={{ bottom: height * 0.45 }}>
-        <TouchableOpacity onPress={() => toggleLike(item.article_id)} className="mb-4">
+        <TouchableOpacity
+          onPress={() => toggleLike(item.article_id)}
+          className="mb-4"
+        >
           <Heart
             color={likedItems[item.article_id] ? "red" : "white"}
             size={32}
@@ -262,23 +139,25 @@ export default function FeedScreen() {
           />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => toggleSave(item.article_id)} className="mb-4">
+        <TouchableOpacity
+          onPress={() => toggleSave(item.article_id)}
+          className="mb-4"
+        >
           <Bookmark
-            color={savedItems[item.article_id] ? "#FFD700" : "white"}
+            color={savedItems[item.article_id] ? "#FFD700" : "white"} // Gold if saved
             size={32}
             fill={savedItems[item.article_id] ? "#FFD700" : "none"}
           />
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => openCommentModal(item.article_id)} className="mb-4">
-          <MessageSquare color="white" size={32} />
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => shareArticle(item.article_data.article_heading, item.article_data.article_link)}>
+        <TouchableOpacity
+          onPress={() => Linking.openURL(item.article_data.article_link)}
+        >
           <Send color="white" size={32} />
         </TouchableOpacity>
       </View>
 
+      {/* Article Information */}
       <View className="flex absolute bottom-10 w-full p-3">
         <View className="w-full rounded-3xl gap-y-2 bg-black/60 p-4">
           <ThemedText className="text-2xl font-bold text-white mb-1">
@@ -287,7 +166,9 @@ export default function FeedScreen() {
           <ThemedText className="text-white mb-2" numberOfLines={10}>
             {item.article_data.article_summary}
           </ThemedText>
-          <TouchableOpacity onPress={() => Linking.openURL(item.article_data.article_link)}>
+          <TouchableOpacity
+            onPress={() => Linking.openURL(item.article_data.article_link)}
+          >
             <ThemedText className="text-[#00c3ff] text-lg font-bold underline">
               Read More
             </ThemedText>
@@ -297,26 +178,44 @@ export default function FeedScreen() {
     </View>
   );
 
-  async function playSound(audio_file_url: string) {
-    console.log('Loading Sound');
-    currSound?.stopAsync(); // Stop any currently playing sound
-    const { sound } = await Audio.Sound.createAsync({ uri: audio_file_url });
-    setCurrSound(sound);
-    await sound.playAsync();
-  }
+  const onViewableItemsChanged = useRef(
+    async ({ viewableItems }: { viewableItems: any[] }) => {
+      if (viewableItems.length > 0) {
+        console.log("Swipe detected");
+        const currentItem = viewableItems[0].item;
 
-  useEffect(() => {
-    return currSound
-      ? () => {
-          currSound.unloadAsync();
+        // Stop and unload the current sound immediately
+        if (currSound) {
+          console.log("Stopping current sound immediately");
+          await currSound.stopAsync(); // Pause the current sound
+          // await currSound.unloadAsync();
         }
-      : undefined;
-  }, [currSound]);
+
+        if (currentItem.audio_data.file_url) {
+          // Play the current article's audio with a delay
+          const sound =
+            prefetchedSounds[currentItem.article_id] ||
+            (await preloadAudio(currentItem.audio_data.file_url));
+          console.log("Playing sound for article:", currentItem.article_id);
+          await sound.playAsync();
+          setCurrSound(sound);
+        }
+      }
+    }
+  ).current;
+
+  async function preloadAudio(audio_file_url: string): Promise<Sound> {
+    const { sound } = await Audio.Sound.createAsync({ uri: audio_file_url });
+    return sound;
+  }
 
   if (loading) {
     return (
       <SafeAreaView className="flex-1 justify-center items-center">
-        <ActivityIndicator size="large" color={colorScheme === "dark" ? "white" : "#4c0120"} />
+        <ActivityIndicator
+          size="large"
+          color={colorScheme === "dark" ? "white" : "#4c0120"}
+        />
       </SafeAreaView>
     );
   }
@@ -332,6 +231,7 @@ export default function FeedScreen() {
             Scrollpedia
           </ThemedText>
 
+          {/* 3-dots menu button - In ScrollPedia line */}
           <View className="relative">
             <TouchableOpacity onPress={toggleMenu}>
               <MoreVertical
@@ -340,13 +240,17 @@ export default function FeedScreen() {
               />
             </TouchableOpacity>
 
+            {/* Menu Dropdown - UI Only */}
             {showMenu && (
               <View className="absolute right-0 top-10 bg-black/80 rounded-lg w-48 z-10 overflow-hidden">
                 <TouchableOpacity
                   onPress={() => toggleMenu()}
                   className="py-3 px-4"
                 >
-                  <Link href={"/(tabs)/savedArticles"} style={{ color: "white" }}>
+                  <Link
+                    href={"/(tabs)/savedArticles"}
+                    style={{ color: "white" }}
+                  >
                     See Saved Articles
                   </Link>
                 </TouchableOpacity>
@@ -365,17 +269,15 @@ export default function FeedScreen() {
           decelerationRate="fast"
           directionalLockEnabled
           showsVerticalScrollIndicator={false}
-          onViewableItemsChanged={({ viewableItems }) => {
-            if (viewableItems.length > 0 && viewableItems[0].item.audio_data.file_url) {
-              playSound(viewableItems[0].item.audio_data.file_url);
+          onScrollEndDrag={() => {
+            // Stop the current sound when the user scrolls
+            if (currSound) {
+              currSound.stopAsync(); // Pause the current sound
             }
           }}
+          onViewableItemsChanged={onViewableItemsChanged} // Use the ref callback
+          viewabilityConfig={{ itemVisiblePercentThreshold: 60 }} // Ensure proper visibility threshold
           className="w-full snap-proximity rounded-tl-3xl rounded-tr-3xl"
-        />
-        <CommentModal
-          visible={isCommentModalVisible}
-          onClose={closeCommentModal}
-          articleId={currentArticleId || 0}
         />
       </LinearGradient>
     </SafeAreaView>
