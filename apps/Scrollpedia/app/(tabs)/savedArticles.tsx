@@ -46,11 +46,11 @@ export default function FeedScreen() {
       const saved = await AsyncStorage.getItem("savedArticles");
       if (saved) {
         try {
-          const parsedSaved = JSON.parse(saved);
+          const parsedSaved: FeedArticleItem[] = JSON.parse(saved);
           setSavedItems(parsedSaved || {});
 
           // Filter out any potentially problematic items
-          const validItems = Object.values(parsedSaved || {}).filter(item =>
+          const validItems = Object.values(parsedSaved || {}).filter((item) =>
             item && item.article_id !== undefined && item.article_data
           );
           setSavedArticlesArray(validItems);
