@@ -9,9 +9,15 @@ import {
   FlatList,
   useColorScheme,
   ActivityIndicator,
-  Text,
+  Share,
 } from "react-native";
-import { Heart, Send, Bookmark, MoreVertical } from "lucide-react-native";
+import {
+  Heart,
+  Send,
+  Bookmark,
+  MoreVertical,
+  ScrollText,
+} from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { ThemedText } from "@/components/ThemedText";
 import feedService, { FeedArticleItem } from "@/services/feedService";
@@ -48,12 +54,9 @@ export default function FeedScreen() {
           setSavedItems(JSON.parse(saved));
         }
 
-        // Fetch feed if not already loaded
         if (!feedArticles) {
           setLoading(true);
           const feed = await feedService.getFeed();
-          console.log(feed);
-
           setFeedArticles(feed);
         }
       } catch (error) {
@@ -95,14 +98,10 @@ export default function FeedScreen() {
         let updated: { [key: number]: FeedArticleItem };
 
         if (isSaved) {
-          // Remove from saved items
           updated = { ...prev };
           delete updated[id];
-          console.log(`Article with ID ${id} removed from saved items`);
         } else {
-          // Add to saved items and print article details
           updated = { ...prev, [id]: article };
-          console.log("Saved Article:", JSON.stringify(article, null, 2)); // Pretty print article object
         }
 
         // Save to AsyncStorage
@@ -111,6 +110,18 @@ export default function FeedScreen() {
       });
     } catch (error) {
       console.error("Error toggling save:", error);
+    }
+  };
+
+  const shareArticle = async (title: string, url: string) => {
+    try {
+      await Share.share({
+        message: `Check out this article I found on Scrollpedia 📜\n\n${title}: ${url}`,
+        url: url,
+        title: title,
+      });
+    } catch (error) {
+      console.error("Error sharing:", error);
     }
   };
 
@@ -133,7 +144,7 @@ export default function FeedScreen() {
           className="mb-4"
         >
           <Heart
-            color={likedItems[item.article_id] ? "red" : "white"}
+            color={likedItems[item.article_id] ? "red" : "#dcdcdc"}
             size={32}
             fill={likedItems[item.article_id] ? "red" : "none"}
           />
@@ -144,16 +155,22 @@ export default function FeedScreen() {
           className="mb-4"
         >
           <Bookmark
-            color={savedItems[item.article_id] ? "#FFD700" : "white"} // Gold if saved
+            color={savedItems[item.article_id] ? "#FFD700" : "#dcdcdc"} // Gold if saved
             size={32}
             fill={savedItems[item.article_id] ? "#FFD700" : "none"}
           />
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={() => Linking.openURL(item.article_data.article_link)}
+          onPress={() =>
+            shareArticle(
+              item.article_data.article_heading,
+              item.article_data.article_link
+            )
+          }
+          className="mb-4"
         >
-          <Send color="white" size={32} />
+          <Send color="#dcdcdc" size={32} />
         </TouchableOpacity>
       </View>
 
@@ -227,15 +244,21 @@ export default function FeedScreen() {
         className="flex-1"
       >
         <View className="flex-row justify-between items-center mt-7 mx-3 py-5">
-          <ThemedText className="text-2xl font-bold text-[#4c0120] dark:text-white">
-            Scrollpedia
-          </ThemedText>
+          <View className="flex-row items-center gap-x-2 ml-2">
+            <ScrollText
+              size={24}
+              color={colorScheme === "dark" ? "white" : "#4c0120"}
+            />
+            <ThemedText className="text-2xl font-bold text-[#4c0120] dark:text-white">
+              Scrollpedia
+            </ThemedText>
+          </View>
 
           {/* 3-dots menu button - In ScrollPedia line */}
           <View className="relative">
             <TouchableOpacity onPress={toggleMenu}>
               <MoreVertical
-                color={colorScheme === "dark" ? "white" : "black"}
+                color={colorScheme === "dark" ? "white" : "#4c0120"}
                 size={28}
               />
             </TouchableOpacity>
@@ -243,11 +266,9 @@ export default function FeedScreen() {
             {/* Menu Dropdown - UI Only */}
             {showMenu && (
               <View className="absolute right-0 top-10 bg-black/80 rounded-lg w-48 z-10 overflow-hidden">
-                <TouchableOpacity
-                  onPress={() => toggleMenu()}
-                  className="py-3 px-4"
-                >
+                <TouchableOpacity onPress={toggleMenu} className="py-3 px-4">
                   <Link
+                    onPress={toggleMenu}
                     href={"/(tabs)/savedArticles"}
                     style={{ color: "white" }}
                   >
@@ -259,26 +280,34 @@ export default function FeedScreen() {
           </View>
         </View>
 
-        <FlatList
-          ref={flatListRef}
-          data={feedArticles}
-          keyExtractor={(item) => item.article_id.toString()}
-          renderItem={renderItem}
-          pagingEnabled
-          snapToAlignment="start"
-          decelerationRate="fast"
-          directionalLockEnabled
-          showsVerticalScrollIndicator={false}
-          onScrollEndDrag={() => {
-            // Stop the current sound when the user scrolls
-            if (currSound) {
-              currSound.stopAsync(); // Pause the current sound
-            }
-          }}
-          onViewableItemsChanged={onViewableItemsChanged} // Use the ref callback
-          viewabilityConfig={{ itemVisiblePercentThreshold: 60 }} // Ensure proper visibility threshold
-          className="w-full snap-proximity rounded-tl-3xl rounded-tr-3xl"
-        />
+        {!feedArticles ? (
+          <View className="flex-1 justify-center items-center">
+            <ThemedText className="text-white font-bold">
+              Couldn't load articles. Please try again later.
+            </ThemedText>
+          </View>
+        ) : (
+          <FlatList
+            ref={flatListRef}
+            data={feedArticles}
+            keyExtractor={(item) => item.article_id.toString()}
+            renderItem={renderItem}
+            pagingEnabled
+            snapToAlignment="start"
+            decelerationRate="fast"
+            directionalLockEnabled
+            showsVerticalScrollIndicator={false}
+            onScrollEndDrag={() => {
+              // Stop the current sound when the user scrolls
+              if (currSound) {
+                currSound.stopAsync();
+              }
+            }}
+            onViewableItemsChanged={onViewableItemsChanged} // Use the ref callback
+            viewabilityConfig={{ itemVisiblePercentThreshold: 60 }} // Ensure proper visibility threshold
+            className="w-full snap-proximity rounded-tl-3xl rounded-tr-3xl"
+          />
+        )}
       </LinearGradient>
     </SafeAreaView>
   );
