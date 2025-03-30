@@ -116,7 +116,7 @@ app.get("/feed", async (c) => {
   const { data: similarArticles, error: articlesError } = await db.rpc("match_articles", {
     query_embedding: userProfile.profile_embedding,
     match_threshold: 0.45,
-    match_count: 15
+    match_count: 30
   });
 
   if (articlesError || !similarArticles) {
