@@ -36,7 +36,7 @@ class FeedService extends BaseService {
       return feed.data.data as FeedArticleItem[];
     } catch (error) {
       console.log("FeedService: Promise rejected with error:", error);
-      return Promise.reject(error);
+      return null;
     }
   }
 }
