@@ -25,6 +25,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link } from "expo-router";
 import { Audio } from "expo-av";
 import { Sound } from "expo-av/build/Audio";
+import { FlashList } from "@shopify/flash-list";
 
 const { height } = Dimensions.get("window");
 
@@ -198,22 +199,17 @@ export default function FeedScreen() {
   const onViewableItemsChanged = useRef(
     async ({ viewableItems }: { viewableItems: any[] }) => {
       if (viewableItems.length > 0) {
-        console.log("Swipe detected");
-        const currentItem = viewableItems[0].item;
-
-        // Stop and unload the current sound immediately
+        const currentArticle = viewableItems[0].item;
         if (currSound) {
           console.log("Stopping current sound immediately");
-          await currSound.stopAsync(); // Pause the current sound
+          await currSound.stopAsync();
           // await currSound.unloadAsync();
         }
-
-        if (currentItem.audio_data.file_url) {
-          // Play the current article's audio with a delay
+        if (currentArticle.audio_data.file_url) {
           const sound =
-            prefetchedSounds[currentItem.article_id] ||
-            (await preloadAudio(currentItem.audio_data.file_url));
-          console.log("Playing sound for article:", currentItem.article_id);
+            prefetchedSounds[currentArticle.article_id] ||
+            (await preloadAudio(currentArticle.audio_data.file_url));
+          console.log("Playing sound for article:", currentArticle.article_id);
           await sound.playAsync();
           setCurrSound(sound);
         }
@@ -287,15 +283,15 @@ export default function FeedScreen() {
             </ThemedText>
           </View>
         ) : (
-          <FlatList
-            ref={flatListRef}
+          <FlashList
             data={feedArticles}
             keyExtractor={(item) => item.article_id.toString()}
             renderItem={renderItem}
+            estimatedItemSize={height * 0.9}
             pagingEnabled
+            snapToInterval={height * 0.9}
             snapToAlignment="start"
             decelerationRate="fast"
-            directionalLockEnabled
             showsVerticalScrollIndicator={false}
             onScrollEndDrag={() => {
               // Stop the current sound when the user scrolls
@@ -305,7 +301,7 @@ export default function FeedScreen() {
             }}
             onViewableItemsChanged={onViewableItemsChanged} // Use the ref callback
             viewabilityConfig={{ itemVisiblePercentThreshold: 60 }} // Ensure proper visibility threshold
-            className="w-full snap-proximity rounded-tl-3xl rounded-tr-3xl"
+            className="w-full snap-y snap-mandatory rounded-tl-3xl rounded-tr-3xl"
           />
         )}
       </LinearGradient>
