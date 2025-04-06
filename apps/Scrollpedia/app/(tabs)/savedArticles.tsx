@@ -24,7 +24,7 @@ import { ThemedText } from "@/components/ThemedText";
 import feedService, { FeedArticleItem } from "@/services/feedService";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Link, router } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native"; // Import useFocusEffect
+import { useFocusEffect } from "@react-navigation/native";
 
 const { height } = Dimensions.get("window");
 
@@ -46,12 +46,21 @@ export default function FeedScreen() {
 
   // Update savedArticlesArray whenever savedItems changes
   useEffect(() => {
-    // Filter out any potentially problematic items
     const validItems = Object.values(savedItems).filter(
       (item) => item && item.article_id !== undefined && item.article_data
     );
     setSavedArticlesArray(validItems);
   }, [savedItems]);
+
+  // Function to update save count in AsyncStorage
+  const updateSaveCount = async (count: number) => {
+    try {
+      await AsyncStorage.setItem("totalSaves", count.toString());
+      console.log("Updated save count:", count);
+    } catch (error) {
+      console.error("Error updating save count:", error);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -62,15 +71,18 @@ export default function FeedScreen() {
           const parsedSaved: FeedArticleItem[] = JSON.parse(saved);
           setSavedItems(parsedSaved || {});
 
-          // Filter out any potentially problematic items
           const validItems = Object.values(parsedSaved || {}).filter(
             (item) => item && item.article_id !== undefined && item.article_data
           );
           setSavedArticlesArray(validItems);
+
+          // Update save count when loading data
+          updateSaveCount(validItems.length);
         } catch (parseError) {
           console.error("Error parsing saved articles:", parseError);
           setSavedItems({});
           setSavedArticlesArray([]);
+          updateSaveCount(0);
         }
       }
 
@@ -119,10 +131,14 @@ export default function FeedScreen() {
           delete updated[id];
           console.log(`Article with ID ${id} removed from saved items`);
         } else {
-          // Add to saved items and print article details
+          // Add to saved items
           updated = { ...prev, [id]: article };
           console.log("Saved Article:", JSON.stringify(article, null, 2));
         }
+
+        // Update save count
+        const newCount = isSaved ? Object.keys(updated).length - 1 : Object.keys(updated).length;
+        updateSaveCount(newCount);
 
         // Save to AsyncStorage
         AsyncStorage.setItem("savedArticles", JSON.stringify(updated));
@@ -138,7 +154,6 @@ export default function FeedScreen() {
   };
 
   const renderItem = ({ item }: { item: FeedArticleItem }) => {
-    // Safety check for valid item
     if (!item || !item.article_data || item.article_id === undefined) {
       return null;
     }
@@ -169,9 +184,9 @@ export default function FeedScreen() {
             className="mb-4"
           >
             <Bookmark
-              color="gold" // Always gold in saved view
+              color="gold"
               size={32}
-              fill="gold" // Always filled in saved view
+              fill="gold"
             />
           </TouchableOpacity>
 
@@ -212,14 +227,13 @@ export default function FeedScreen() {
     );
   };
 
-  // Empty state when no saved articles
   const renderEmptyState = () => (
     <View className="flex-1 justify-center items-center p-5">
       <ThemedText className="text-xl font-bold dark:text-white text-center mb-4">
         You haven't saved any articles yet
       </ThemedText>
       <TouchableOpacity
-        onPress={() => Linking.openURL("/(tabs)/feed")}
+        onPress={() => router.push("/(tabs)/feed")}
         className="bg-[#4C0120] py-3 px-6 rounded-full"
       >
         <ThemedText className="text-white font-bold">
@@ -276,7 +290,7 @@ export default function FeedScreen() {
             directionalLockEnabled
             showsVerticalScrollIndicator={false}
             className="w-full snap-proximity rounded-tl-3xl rounded-tr-3xl"
-            extraData={savedItems} // Ensure FlatList re-renders when savedItems changes
+            extraData={savedItems}
           />
         ) : (
           renderEmptyState()
