@@ -30,6 +30,8 @@ Scrollpedia is a modern, AI-powered React Native app that delivers an immersive,
 - **Backend**: Hono.js running on Cloudflare Workers.
 - **Database**: PostgreSQL for structured data, Redis for caching and session management.
 - **AI & ML**: Llama LLM for article summaries and TensorFlow for personalized recommendations.
+- **Audio Transcripts**: Uses AWS Polly TTS service.
+- **Storage**: Uses S3/Cloudinary for storing audio (mp3) files.
 - **Infrastructure**: Cloudflare Workers for edge deployment and fast content delivery.
 
 ## Getting Started
